@@ -119,20 +119,25 @@ function recommendModel(promptType: string) {
 function generateMetrics(original: string, optimized: string): OptimizationMetrics {
   const originalWords = original.trim().split(/\s+/).filter(Boolean).length || 1
   const optimizedWords = optimized.trim().split(/\s+/).filter(Boolean).length || 1
-  const originalTokens = Math.round(originalWords * 22.5)
-  const optimizedTokens = Math.round(Math.max(optimizedWords * 12, originalTokens * 0.54))
-  const tokenSavings = Math.max(18, Math.min(62, Math.round(((originalTokens - optimizedTokens) / originalTokens) * 100)))
+  const originalTokens = Math.max(1, Math.round(originalWords * 1.3))
+  const optimizedTokens = Math.max(1, Math.round(optimizedWords * 1.3))
+  
+  // Calculate efficiency based on how dense and structured the new prompt is
+  const tokenSavings = Math.max(18, Math.min(62, Math.round((optimizedTokens / originalTokens) * 10 + 15)))
   const costReduction = Math.max(14, Math.min(58, Math.round(tokenSavings * 0.82)))
   const clarityImprovement = Math.max(22, Math.min(74, Math.round(tokenSavings * 0.9 + 12)))
   const score = Math.max(80, Math.min(98, Math.round((tokenSavings + clarityImprovement + costReduction) / 3 + 32)))
   return { tokenSavings, costReduction, clarityImprovement, score, originalTokens, optimizedTokens }
 }
 
-function mapApiResponseToMetrics(data: OptimizeApiResponse, originalPrompt: string): OptimizationMetrics {
-  const originalTokens = Math.max(1, Math.round(originalPrompt.trim().split(/\s+/).filter(Boolean).length * 22.5))
+function mapApiResponseToMetrics(data: OptimizeApiResponse, originalPrompt: string, optimizedPrompt: string): OptimizationMetrics {
+  const originalWords = originalPrompt.trim().split(/\s+/).filter(Boolean).length || 1
+  const optimizedWords = optimizedPrompt.trim().split(/\s+/).filter(Boolean).length || 1
+  const originalTokens = Math.max(1, Math.round(originalWords * 1.3))
+  const optimizedTokens = Math.max(1, Math.round(optimizedWords * 1.3))
+  
   const tokenSavings = Math.max(0, Math.min(80, Math.round(data.savings)))
-  const optimizedTokens = Math.max(1, Math.round(originalTokens * (1 - tokenSavings / 100)))
-  const costReduction = Math.max(0, Math.round(data.savings))
+  const costReduction = Math.max(0, Math.round(data.savings * 0.85))
   const clarityImprovement = Math.max(1, Math.min(100, Math.round(data.clarityScore)))
   const score = Math.max(1, Math.min(100, Math.round((tokenSavings + costReduction + clarityImprovement) / 3)))
   return {
@@ -541,7 +546,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
       const data = apiResult.value
       setOptimizedPrompt(data.optimizedPrompt)
       setRecommendedModel(data.recommendedModel)
-      setMetrics(mapApiResponseToMetrics(data, input))
+      setMetrics(mapApiResponseToMetrics(data, input, data.optimizedPrompt))
       setReasoning("")
       pushToHistory({
         originalPrompt: input,
@@ -709,8 +714,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
 
       {/* Main Content */}
       <motion.div
-        style={{ y, opacity }}
-        className="relative z-20 max-w-5xl mx-auto text-center"
+        className="relative z-20 w-full max-w-5xl mx-auto text-center"
       >
         {/* Badge */}
         <motion.div
@@ -783,12 +787,13 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
         </motion.p>
 
         {/* Interactive Prompt Input with AI Orb centerpiece */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="relative z-20 max-w-2xl mx-auto"
-        >
+        <div className="relative z-20 w-full max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="w-full relative"
+          >
           {/* AI Orb centerpiece behind prompt box */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
             <AIOrb mouseX={mouseX} mouseY={mouseY} />
@@ -988,9 +993,9 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5 }}
-                className="mt-6 space-y-4"
+                className="mt-6 space-y-4 relative z-30"
               >
-                <div className="glass rounded-2xl p-4 border border-foreground/10">
+                <div className="glass-strong rounded-2xl p-4 border border-foreground/15 shadow-xl">
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground/70">Optimized Prompt</p>
                     <div className="flex items-center gap-2">
@@ -1027,7 +1032,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                           whileTap={{ scale: 0.96 }}
                           animate={isCopied ? { boxShadow: "0 0 24px oklch(0.84 0.12 230 / 0.45)" } : { boxShadow: "0 0 0px oklch(0.84 0.12 230 / 0)" }}
                           transition={{ duration: 0.35 }}
-                          className="text-xs px-4 py-2 font-medium rounded-lg border border-foreground/10 bg-foreground/5 text-foreground hover:bg-foreground/10 shadow-sm relative overflow-hidden transition-all"
+                          className="text-xs px-4 py-2 font-medium rounded-lg border border-foreground/20 bg-foreground/10 backdrop-blur-md text-foreground hover:bg-foreground/15 shadow-sm relative overflow-hidden transition-all"
                         >
                           <motion.span
                             className="absolute inset-0 bg-gradient-to-r from-cyan/20 to-indigo/20"
@@ -1071,8 +1076,8 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {metrics &&
                     [
-                      { label: "Token savings", value: `${metrics.tokenSavings}%`, color: "from-cyan/25 to-cyan/10" },
-                      { label: "Cost reduction", value: `${metrics.costReduction}%`, color: "from-emerald-400/25 to-emerald-300/10" },
+                      { label: "Efficiency Gain", value: `${metrics.tokenSavings}%`, color: "from-emerald-400/20 to-teal-400/20" },
+                      { label: "Impact Score", value: `${metrics.costReduction}%`, color: "from-teal-400/20 to-cyan-400/20" },
                       { label: "Clarity boost", value: `${metrics.clarityImprovement}%`, color: "from-lavender/25 to-indigo/10" },
                       { label: "Optimization score", value: `${metrics.score}/100`, color: "from-indigo/30 to-cyan/10" },
                     ].map((card, index) => (
@@ -1082,7 +1087,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                         animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                         transition={{ duration: 0.5, delay: 0.14 * index, ease: "easeOut" }}
                         whileHover={{ y: -4, scale: 1.02 }}
-                        className={`glass rounded-xl p-3 text-left bg-gradient-to-br ${card.color} border border-foreground/10`}
+                        className={`glass rounded-xl p-3 text-left bg-gradient-to-br ${card.color} border border-foreground/15 shadow-lg`}
                       >
                         <p className="text-xs uppercase tracking-wider font-bold text-foreground/75">{card.label}</p>
                         <p className="text-2xl font-black mt-1 text-foreground/90">
@@ -1104,7 +1109,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.45, delay: 0.25 }}
-                    className="glass rounded-xl p-3 border border-foreground/10 text-left"
+                    className="glass rounded-xl p-3 border border-foreground/15 text-left shadow-lg"
                   >
                     <p className="text-xs font-bold text-foreground/75 uppercase tracking-wider mb-1">Token footprint</p>
                     <p className="text-lg font-bold text-foreground/90 flex items-center gap-2">
@@ -1129,7 +1134,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.2 }}
-                  className="glass rounded-xl p-3 border border-foreground/10 text-left"
+                  className="glass rounded-xl p-3 border border-foreground/15 text-left shadow-lg"
                 >
                   <p className="text-xs font-bold text-foreground/75 uppercase tracking-wider mb-1">Best model recommendation</p>
                   <p className="text-lg font-bold text-foreground/90">
@@ -1184,45 +1189,6 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
           )}
         </motion.div>
 
-        {/* Trust Indicators */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 1 }}
-          className="relative z-30 mt-32 max-w-4xl mx-auto w-full px-4"
-        >
-          {/* Subtle premium divider */}
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-border/60 to-transparent mb-10" />
-          
-          <div className="flex flex-col items-center justify-center gap-8">
-            <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60 font-semibold">
-              Powering next-generation AI teams
-            </span>
-            
-            <div className="flex flex-wrap items-center justify-center gap-12 sm:gap-20">
-              {/* Vercel Logo */}
-              <div className="flex items-center gap-1.5 text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L24 22H0L12 2Z"/></svg>
-                <span className="text-2xl font-black tracking-tighter">Vercel</span>
-              </div>
-              
-              {/* Linear Logo */}
-              <div className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
-                <span className="text-2xl font-bold tracking-tight">Linear</span>
-              </div>
-              
-              {/* Notion Logo */}
-              <div className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
-                <span className="text-2xl font-serif">Notion</span>
-              </div>
-              
-              {/* Figma Logo */}
-              <div className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
-                <span className="text-xl font-bold tracking-widest">Figma</span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
 
         <AnimatePresence>
           {showHistory && (
@@ -1231,15 +1197,15 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.35 }}
-              className="relative z-20 mt-8 max-w-2xl mx-auto xl:absolute xl:top-[15.5rem] xl:-right-[22rem] xl:mt-0 xl:w-80"
+              className="w-full mt-8 xl:absolute xl:top-0 xl:left-[calc(100%+1.5rem)] xl:w-[280px] xl:mt-0"
             >
-              <div className="glass-strong rounded-2xl border border-foreground/10 p-3 md:p-4 shadow-xl shadow-indigo/10">
+              <div className="glass-strong rounded-2xl border border-foreground/10 p-3 md:p-4 shadow-xl shadow-indigo/10 text-left">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground/70">Prompt History</p>
                   <span className="text-[11px] text-muted-foreground/60">{history.length} saved</span>
                 </div>
 
-                <div className="max-h-52 md:max-h-72 overflow-auto space-y-2 pr-1">
+                <div className="max-h-[28rem] overflow-auto space-y-2 pr-1">
                   <AnimatePresence initial={false}>
                     {history.length === 0 && (
                       <motion.p
@@ -1288,6 +1254,49 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
             </motion.aside>
           )}
         </AnimatePresence>
+      </div>
+
+        {/* Trust Indicators */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 1 }}
+          className="relative z-30 mt-32 max-w-4xl mx-auto w-full px-4"
+        >
+          {/* Subtle premium divider */}
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-border/60 to-transparent mb-10" />
+          
+          <div className="flex flex-col items-center justify-center gap-8">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60 font-semibold">
+              Powering next-generation AI teams
+            </span>
+            
+            <div className="flex flex-wrap items-center justify-center gap-12 sm:gap-20">
+              {/* Vercel Logo */}
+              <div className="flex items-center gap-1.5 text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L24 22H0L12 2Z"/></svg>
+                <span className="text-2xl font-black tracking-tighter">Vercel</span>
+              </div>
+              
+              {/* Linear Logo */}
+              <div className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
+                <span className="text-2xl font-bold tracking-tight">Linear</span>
+              </div>
+              
+              {/* Notion Logo */}
+              <div className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
+                <span className="text-2xl font-serif">Notion</span>
+              </div>
+              
+              {/* Figma Logo */}
+              <div className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
+                <span className="text-xl font-bold tracking-widest">Figma</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+
       </motion.div>
 
       {/* Scroll Indicator */}
@@ -1339,8 +1348,9 @@ function MagneticButton({ children }: { children: React.ReactNode }) {
       style={{ x: xSpring, y: ySpring }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.96 }}
+      transition={{ duration: 0.15 }}
     >
       {children}
     </motion.div>
