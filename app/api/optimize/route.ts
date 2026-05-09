@@ -143,8 +143,13 @@ function sanitizeOptimizedPrompt(text: string) {
 
 function parseAndValidateResponse(rawText: string) {
   let parsed: ParsedModelResponse = {}
+  
+  // Extract JSON from markdown backticks or preambles
+  const match = rawText.match(/\{[\s\S]*\}/)
+  const jsonString = match ? match[0] : rawText
+
   try {
-    parsed = JSON.parse(rawText) as ParsedModelResponse
+    parsed = JSON.parse(jsonString) as ParsedModelResponse
   } catch {
     return { ok: false as const, reason: "invalid OpenRouter JSON response" }
   }
@@ -253,50 +258,75 @@ Rules:
 `
 
     try {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 25000)
+      let rawText = ""
+      let parsedResponse: ReturnType<typeof parseAndValidateResponse> = { ok: false, reason: "initial" }
+      let isSuccess = false
+      let lastError = ""
 
-      const openRouterResponse = await fetch(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${openRouterApiKey}`,
-          },
-          body: JSON.stringify({
-            model: "openrouter/free",
-            messages: [
-              { role: "system", content: "You optimize user prompts and return strict JSON only." },
-              {
-                role: "user",
-                content: `${instruction}\n\nUser prompt:\n${prompt}`,
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 20000)
+
+          const openRouterResponse = await fetch(
+            "https://openrouter.ai/api/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${openRouterApiKey}`,
               },
-            ],
-            temperature: 0.3,
-            top_p: 0.9,
-            max_tokens: 500,
-          }),
-          signal: controller.signal,
-        },
-      )
-      clearTimeout(timeout)
+              body: JSON.stringify({
+                model: "openrouter/free",
+                messages: [
+                  { role: "system", content: "You are an expert AI Prompt Engineer. Return strict JSON only." },
+                  {
+                    role: "user",
+                    content: `${instruction}\n\nUser prompt:\n${prompt}`,
+                  },
+                ],
+                temperature: 0.3 + (attempt * 0.1),
+                top_p: 0.9,
+                max_tokens: 800,
+              }),
+              signal: controller.signal,
+            },
+          )
+          clearTimeout(timeout)
 
-      if (!openRouterResponse.ok) {
-        const errorText = await openRouterResponse.text()
-        return NextResponse.json(fallbackResponse(prompt, promptType, `OpenRouter API error: ${errorText.slice(0, 180)}`))
+          if (!openRouterResponse.ok) {
+            lastError = `HTTP ${openRouterResponse.status}`
+            continue
+          }
+
+          const openRouterData = await openRouterResponse.json()
+          rawText = openRouterData?.choices?.[0]?.message?.content?.trim() ?? ""
+          
+          if (!rawText) {
+            lastError = "empty OpenRouter response"
+            continue
+          }
+
+          parsedResponse = parseAndValidateResponse(rawText)
+          if (parsedResponse.ok) {
+            isSuccess = true
+            break
+          } else {
+            lastError = parsedResponse.reason
+          }
+        } catch (e) {
+          lastError = e instanceof Error ? e.message : "fetch error"
+        }
+        
+        // Wait 1 second before retrying
+        await new Promise(r => setTimeout(r, 1000))
       }
 
-      const openRouterData = await openRouterResponse.json()
-      const rawText: string = openRouterData?.choices?.[0]?.message?.content?.trim() ?? ""
-      if (!rawText) {
-        return NextResponse.json(fallbackResponse(prompt, promptType, "empty OpenRouter response"))
+      if (!isSuccess || !parsedResponse.ok) {
+        return NextResponse.json(fallbackResponse(prompt, promptType, `OpenRouter retries exhausted. Last error: ${lastError}`))
       }
 
-      const parsed = parseAndValidateResponse(rawText)
-      if (!parsed.ok) {
-        return NextResponse.json(fallbackResponse(prompt, promptType, parsed.reason))
-      }
+      const parsed = parsedResponse
 
       const before = estimateTokens(prompt)
       const after = estimateTokens(parsed.optimizedPrompt)
