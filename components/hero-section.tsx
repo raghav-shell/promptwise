@@ -621,11 +621,11 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
       className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-32 pb-20 overflow-hidden"
     >
       {/* Premium subtle grid background */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)] z-0 pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)] z-[-1] pointer-events-none" />
 
       {/* Mouse-follow lighting effect */}
       <motion.div
-        className="pointer-events-none fixed z-0 rounded-full blur-[80px] will-change-transform"
+        className="pointer-events-none fixed -z-10 rounded-full blur-[80px] will-change-transform"
         style={{
           width: 800,
           height: 800,
@@ -639,7 +639,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
 
       {/* Animated Background Orbs with parallax */}
       <motion.div 
-        className="absolute inset-0 overflow-hidden pointer-events-none"
+        className="absolute inset-0 overflow-hidden pointer-events-none -z-10"
         style={{ y: backgroundY }}
       >
         <motion.div
@@ -1084,8 +1084,8 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                         whileHover={{ y: -4, scale: 1.02 }}
                         className={`glass rounded-xl p-3 text-left bg-gradient-to-br ${card.color} border border-foreground/10`}
                       >
-                        <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/80">{card.label}</p>
-                        <p className="text-xl font-bold mt-1 text-foreground">
+                        <p className="text-xs uppercase tracking-wider font-bold text-foreground/75">{card.label}</p>
+                        <p className="text-2xl font-black mt-1 text-foreground/90">
                           {card.label === "Optimization score" ? (
                             <>
                               <AnimatedCounter value={metrics.score} />
@@ -1106,9 +1106,9 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                     transition={{ duration: 0.45, delay: 0.25 }}
                     className="glass rounded-xl p-3 border border-foreground/10 text-left"
                   >
-                    <p className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider mb-1">Token footprint</p>
-                    <p className="text-base font-medium text-foreground flex items-center gap-2">
-                      <span className="font-semibold text-muted-foreground">
+                    <p className="text-xs font-bold text-foreground/75 uppercase tracking-wider mb-1">Token footprint</p>
+                    <p className="text-lg font-bold text-foreground/90 flex items-center gap-2">
+                      <span className="font-bold text-foreground/70">
                         <AnimatedCounter value={metrics.originalTokens} />
                       </span>
                       <motion.span
@@ -1118,7 +1118,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                       >
                         →
                       </motion.span>
-                      <span className="font-bold text-indigo-300">
+                      <span className="font-black text-indigo-600">
                         <AnimatedCounter value={metrics.optimizedTokens} />
                       </span>
                     </p>
@@ -1131,12 +1131,12 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                   transition={{ duration: 0.4, delay: 0.2 }}
                   className="glass rounded-xl p-3 border border-foreground/10 text-left"
                 >
-                  <p className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider mb-1">Best model recommendation</p>
-                  <p className="text-base font-medium text-foreground">
-                    <span className="font-bold text-indigo-500">{recommendedModel}</span>
+                  <p className="text-xs font-bold text-foreground/75 uppercase tracking-wider mb-1">Best model recommendation</p>
+                  <p className="text-lg font-bold text-foreground/90">
+                    <span className="font-black text-indigo-600">{recommendedModel}</span>
                     {" "}for this prompt category.
                   </p>
-                  {reasoning && <p className="text-sm text-muted-foreground/90 mt-1">{reasoning}</p>}
+                  {reasoning && <p className="text-sm font-medium text-foreground/80 mt-1">{reasoning}</p>}
                 </motion.div>
               </motion.div>
             )}
