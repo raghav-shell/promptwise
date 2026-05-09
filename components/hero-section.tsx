@@ -1002,7 +1002,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                             window.open(`https://chatgpt.com/?q=${encodeURIComponent(optimizedPrompt)}`, '_blank')
                           }}
                           whileTap={{ scale: 0.96 }}
-                          className="text-[11px] px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 transition-colors"
+                          className="text-xs px-4 py-2 font-medium rounded-lg border border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-500 shadow-md shadow-emerald-500/20 transition-all"
                         >
                           Open in ChatGPT
                         </motion.button>
@@ -1015,7 +1015,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                             window.open(`https://claude.ai/new`, '_blank')
                           }}
                           whileTap={{ scale: 0.96 }}
-                          className="text-[11px] px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 hover:text-amber-300 transition-colors"
+                          className="text-xs px-4 py-2 font-medium rounded-lg border border-amber-600 bg-amber-600 text-white hover:bg-amber-500 shadow-md shadow-amber-500/20 transition-all"
                         >
                           Open in Claude
                         </motion.button>
@@ -1027,7 +1027,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                           whileTap={{ scale: 0.96 }}
                           animate={isCopied ? { boxShadow: "0 0 24px oklch(0.84 0.12 230 / 0.45)" } : { boxShadow: "0 0 0px oklch(0.84 0.12 230 / 0)" }}
                           transition={{ duration: 0.35 }}
-                          className="text-[11px] px-3 py-1.5 rounded-lg border border-white/20 bg-white/5 text-muted-foreground hover:text-foreground relative overflow-hidden"
+                          className="text-xs px-4 py-2 font-medium rounded-lg border border-white/20 bg-white/10 text-white hover:bg-white/20 shadow-md relative overflow-hidden transition-all"
                         >
                           <motion.span
                             className="absolute inset-0 bg-gradient-to-r from-cyan/20 to-indigo/20"
@@ -1055,7 +1055,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                     initial={{ opacity: 0, filter: "blur(6px)" }}
                     animate={{ opacity: 1, filter: "blur(0px)" }}
                     transition={{ duration: 0.45 }}
-                    className="text-left text-sm text-foreground/90 whitespace-pre-line"
+                    className="text-left text-base text-white/95 whitespace-pre-line font-medium leading-relaxed"
                   >
                     {displayedOptimizedPrompt}
                     {displayedOptimizedPrompt !== optimizedPrompt && (
@@ -1084,8 +1084,8 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                         whileHover={{ y: -4, scale: 1.02 }}
                         className={`glass rounded-xl p-3 text-left bg-gradient-to-br ${card.color} border border-white/20`}
                       >
-                        <p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">{card.label}</p>
-                        <p className="text-lg font-semibold mt-1 text-foreground">
+                        <p className="text-xs uppercase tracking-wider font-semibold text-white/80">{card.label}</p>
+                        <p className="text-xl font-bold mt-1 text-white">
                           {card.label === "Optimization score" ? (
                             <>
                               <AnimatedCounter value={metrics.score} />
@@ -1106,9 +1106,9 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                     transition={{ duration: 0.45, delay: 0.25 }}
                     className="glass rounded-xl p-3 border border-white/20 text-left"
                   >
-                    <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-1">Token footprint</p>
-                    <p className="text-sm text-foreground flex items-center gap-2">
-                      <span className="font-semibold text-muted-foreground">
+                    <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-1">Token footprint</p>
+                    <p className="text-base font-medium text-white flex items-center gap-2">
+                      <span className="font-semibold text-white/80">
                         <AnimatedCounter value={metrics.originalTokens} />
                       </span>
                       <motion.span
@@ -1118,7 +1118,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                       >
                         →
                       </motion.span>
-                      <span className="font-semibold text-indigo">
+                      <span className="font-bold text-indigo-300">
                         <AnimatedCounter value={metrics.optimizedTokens} />
                       </span>
                     </p>
@@ -1131,12 +1131,12 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                   transition={{ duration: 0.4, delay: 0.2 }}
                   className="glass rounded-xl p-3 border border-white/20 text-left"
                 >
-                  <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-1">Best model recommendation</p>
-                  <p className="text-sm text-foreground">
-                    <span className="font-semibold text-indigo">{recommendedModel}</span>
+                  <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-1">Best model recommendation</p>
+                  <p className="text-base font-medium text-white">
+                    <span className="font-bold text-indigo-300">{recommendedModel}</span>
                     {" "}for this prompt category.
                   </p>
-                  {reasoning && <p className="text-xs text-muted-foreground/80 mt-1">{reasoning}</p>}
+                  {reasoning && <p className="text-sm text-white/70 mt-1">{reasoning}</p>}
                 </motion.div>
               </motion.div>
             )}
