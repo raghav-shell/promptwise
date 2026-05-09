@@ -849,13 +849,13 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                           type="button"
                           role="combobox"
                           aria-expanded={openTargetModel}
-                          className="flex items-center justify-between bg-white/5 border border-white/10 rounded-md px-3 py-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-emerald-500/50 w-[140px] transition-all hover:bg-white/10"
+                          className="flex items-center justify-between bg-foreground/5 border border-foreground/5 rounded-md px-3 py-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-emerald-500/50 w-[140px] transition-all hover:bg-foreground/10"
                         >
                           <span className="truncate">{targetModel}</span>
                           <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[200px] p-0 bg-background/95 backdrop-blur-xl border-white/10">
+                      <PopoverContent className="w-[200px] p-0 bg-background/95 backdrop-blur-xl border-foreground/5">
                         <Command>
                           <CommandInput 
                             placeholder="Search AI models..." 
@@ -990,7 +990,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                 transition={{ duration: 0.5 }}
                 className="mt-6 space-y-4"
               >
-                <div className="glass rounded-2xl p-4 border border-white/20">
+                <div className="glass rounded-2xl p-4 border border-foreground/10">
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground/70">Optimized Prompt</p>
                     <div className="flex items-center gap-2">
@@ -1027,7 +1027,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                           whileTap={{ scale: 0.96 }}
                           animate={isCopied ? { boxShadow: "0 0 24px oklch(0.84 0.12 230 / 0.45)" } : { boxShadow: "0 0 0px oklch(0.84 0.12 230 / 0)" }}
                           transition={{ duration: 0.35 }}
-                          className="text-xs px-4 py-2 font-medium rounded-lg border border-white/20 bg-white/10 text-white hover:bg-white/20 shadow-md relative overflow-hidden transition-all"
+                          className="text-xs px-4 py-2 font-medium rounded-lg border border-foreground/10 bg-foreground/5 text-foreground hover:bg-foreground/10 shadow-sm relative overflow-hidden transition-all"
                         >
                           <motion.span
                             className="absolute inset-0 bg-gradient-to-r from-cyan/20 to-indigo/20"
@@ -1055,7 +1055,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                     initial={{ opacity: 0, filter: "blur(6px)" }}
                     animate={{ opacity: 1, filter: "blur(0px)" }}
                     transition={{ duration: 0.45 }}
-                    className="text-left text-base text-white/95 whitespace-pre-line font-medium leading-relaxed"
+                    className="text-left text-base text-foreground/90 whitespace-pre-line font-medium leading-relaxed"
                   >
                     {displayedOptimizedPrompt}
                     {displayedOptimizedPrompt !== optimizedPrompt && (
@@ -1082,10 +1082,10 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                         animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                         transition={{ duration: 0.5, delay: 0.14 * index, ease: "easeOut" }}
                         whileHover={{ y: -4, scale: 1.02 }}
-                        className={`glass rounded-xl p-3 text-left bg-gradient-to-br ${card.color} border border-white/20`}
+                        className={`glass rounded-xl p-3 text-left bg-gradient-to-br ${card.color} border border-foreground/10`}
                       >
-                        <p className="text-xs uppercase tracking-wider font-semibold text-white/80">{card.label}</p>
-                        <p className="text-xl font-bold mt-1 text-white">
+                        <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/80">{card.label}</p>
+                        <p className="text-xl font-bold mt-1 text-foreground">
                           {card.label === "Optimization score" ? (
                             <>
                               <AnimatedCounter value={metrics.score} />
@@ -1104,11 +1104,11 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.45, delay: 0.25 }}
-                    className="glass rounded-xl p-3 border border-white/20 text-left"
+                    className="glass rounded-xl p-3 border border-foreground/10 text-left"
                   >
-                    <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-1">Token footprint</p>
-                    <p className="text-base font-medium text-white flex items-center gap-2">
-                      <span className="font-semibold text-white/80">
+                    <p className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider mb-1">Token footprint</p>
+                    <p className="text-base font-medium text-foreground flex items-center gap-2">
+                      <span className="font-semibold text-muted-foreground">
                         <AnimatedCounter value={metrics.originalTokens} />
                       </span>
                       <motion.span
@@ -1129,14 +1129,14 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.2 }}
-                  className="glass rounded-xl p-3 border border-white/20 text-left"
+                  className="glass rounded-xl p-3 border border-foreground/10 text-left"
                 >
-                  <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-1">Best model recommendation</p>
-                  <p className="text-base font-medium text-white">
-                    <span className="font-bold text-indigo-300">{recommendedModel}</span>
+                  <p className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider mb-1">Best model recommendation</p>
+                  <p className="text-base font-medium text-foreground">
+                    <span className="font-bold text-indigo-500">{recommendedModel}</span>
                     {" "}for this prompt category.
                   </p>
-                  {reasoning && <p className="text-sm text-white/70 mt-1">{reasoning}</p>}
+                  {reasoning && <p className="text-sm text-muted-foreground/90 mt-1">{reasoning}</p>}
                 </motion.div>
               </motion.div>
             )}
@@ -1233,7 +1233,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
               transition={{ duration: 0.35 }}
               className="relative z-20 mt-8 max-w-2xl mx-auto xl:absolute xl:top-[15.5rem] xl:-right-[22rem] xl:mt-0 xl:w-80"
             >
-              <div className="glass-strong rounded-2xl border border-white/20 p-3 md:p-4 shadow-xl shadow-indigo/10">
+              <div className="glass-strong rounded-2xl border border-foreground/10 p-3 md:p-4 shadow-xl shadow-indigo/10">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground/70">Prompt History</p>
                   <span className="text-[11px] text-muted-foreground/60">{history.length} saved</span>
@@ -1259,7 +1259,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                         exit={{ opacity: 0, y: -8, scale: 0.98 }}
                         transition={{ duration: 0.25, delay: index * 0.04 }}
-                        className="glass rounded-xl border border-white/15 p-2.5"
+                        className="glass rounded-xl border border-foreground/10 p-2.5"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <button
@@ -1275,7 +1275,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                             type="button"
                             whileTap={{ scale: 0.92 }}
                             onClick={() => deleteHistoryItem(item.id)}
-                            className="text-[11px] px-2 py-1 rounded-md border border-white/20 text-muted-foreground/70 hover:text-foreground hover:border-white/35"
+                            className="text-[11px] px-2 py-1 rounded-md border border-foreground/10 text-muted-foreground/70 hover:text-foreground hover:border-foreground/20"
                           >
                             Delete
                           </motion.button>
