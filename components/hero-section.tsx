@@ -2,9 +2,12 @@
 
 import { motion, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } from "framer-motion"
 import { useRef, useState, useEffect } from "react"
-import { ArrowRight, Sparkles, History } from "lucide-react"
+import { ArrowRight, Sparkles, History, Check, ChevronsUpDown } from "lucide-react"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { cn } from "@/lib/utils"
 
 const placeholderPrompts = [
   "make a website that looks nice and has good colors...",
@@ -386,7 +389,24 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
   const [reasoning, setReasoning] = useState("")
   const [isCopied, setIsCopied] = useState(false)
   const [targetModel, setTargetModel] = useState("Auto-detect")
+  const [openTargetModel, setOpenTargetModel] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
   const [history, setHistory] = useState<PromptHistoryItem[]>([])
+
+  const AI_MODELS = [
+    "Auto-detect",
+    "ChatGPT",
+    "Claude 3.5 Sonnet",
+    "Claude 3 Opus",
+    "Gemini 1.5 Pro",
+    "Gemini 1.5 Flash",
+    "Midjourney",
+    "DALL-E 3",
+    "Notion AI",
+    "Cursor",
+    "GitHub Copilot",
+    "Perplexity"
+  ]
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -823,20 +843,67 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                   
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase font-semibold text-muted-foreground/60 tracking-wider">Target AI:</span>
-                    <input 
-                      list="ai-models" 
-                      value={targetModel}
-                      onChange={(e) => setTargetModel(e.target.value)}
-                      className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-xs text-foreground outline-none focus:ring-1 focus:ring-emerald-500/50 w-28 placeholder:text-muted-foreground/40 transition-all"
-                      placeholder="Auto-detect"
-                    />
-                    <datalist id="ai-models">
-                      <option value="Auto-detect" />
-                      <option value="ChatGPT" />
-                      <option value="Claude 3.5" />
-                      <option value="Gemini" />
-                      <option value="Midjourney" />
-                    </datalist>
+                    <Popover open={openTargetModel} onOpenChange={setOpenTargetModel}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          role="combobox"
+                          aria-expanded={openTargetModel}
+                          className="flex items-center justify-between bg-white/5 border border-white/10 rounded-md px-3 py-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-emerald-500/50 w-[140px] transition-all hover:bg-white/10"
+                        >
+                          <span className="truncate">{targetModel}</span>
+                          <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[200px] p-0 bg-background/95 backdrop-blur-xl border-white/10">
+                        <Command>
+                          <CommandInput 
+                            placeholder="Search AI models..." 
+                            className="h-9 text-xs" 
+                            value={searchQuery}
+                            onValueChange={setSearchQuery}
+                          />
+                          <CommandList className="max-h-[200px] custom-scrollbar">
+                            <CommandEmpty className="py-2 text-center text-xs px-2">
+                              <p className="text-muted-foreground mb-2">No models found.</p>
+                              {searchQuery && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTargetModel(searchQuery)
+                                    setOpenTargetModel(false)
+                                  }}
+                                  className="text-emerald-400 bg-emerald-500/10 px-2 py-1.5 rounded-md hover:bg-emerald-500/20 w-full text-left truncate"
+                                >
+                                  Use "{searchQuery}"
+                                </button>
+                              )}
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {AI_MODELS.map((model) => (
+                                <CommandItem
+                                  key={model}
+                                  value={model}
+                                  onSelect={(currentValue) => {
+                                    setTargetModel(model)
+                                    setOpenTargetModel(false)
+                                  }}
+                                  className="text-xs py-1.5"
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-3 w-3",
+                                      targetModel === model ? "opacity-100 text-emerald-400" : "opacity-0"
+                                    )}
+                                  />
+                                  {model}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
                 <MagneticButton>
