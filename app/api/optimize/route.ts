@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { GoogleGenAI } from "@google/genai"
 
 type PromptType = "coding" | "writing" | "research" | "marketing" | "general"
 
@@ -220,9 +221,9 @@ export async function POST(request: Request) {
 
     const promptType = detectPromptType(prompt)
     const recommendedModel = recommendModel(promptType)
-    const openRouterApiKey = process.env.OPENROUTER_API_KEY
-    if (!openRouterApiKey) {
-      return NextResponse.json(fallbackResponse(prompt, promptType, "missing OPENROUTER_API_KEY"))
+    const geminiApiKey = process.env.GEMINI_API_KEY
+    if (!geminiApiKey) {
+      return NextResponse.json(fallbackResponse(prompt, promptType, "missing GEMINI_API_KEY"))
     }
 
     const instruction = `
@@ -259,71 +260,28 @@ Rules:
 
     try {
       let rawText = ""
-      let parsedResponse: ReturnType<typeof parseAndValidateResponse> = { ok: false, reason: "initial" }
-      let isSuccess = false
-      let lastError = ""
-
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const controller = new AbortController()
-          const timeout = setTimeout(() => controller.abort(), 20000)
-
-          const openRouterResponse = await fetch(
-            "https://openrouter.ai/api/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${openRouterApiKey}`,
-              },
-              body: JSON.stringify({
-                model: "openrouter/free",
-                messages: [
-                  { role: "system", content: "You are an expert AI Prompt Engineer. Return strict JSON only." },
-                  {
-                    role: "user",
-                    content: `${instruction}\n\nUser prompt:\n${prompt}`,
-                  },
-                ],
-                temperature: 0.3 + (attempt * 0.1),
-                top_p: 0.9,
-                max_tokens: 800,
-              }),
-              signal: controller.signal,
-            },
-          )
-          clearTimeout(timeout)
-
-          if (!openRouterResponse.ok) {
-            lastError = `HTTP ${openRouterResponse.status}`
-            continue
-          }
-
-          const openRouterData = await openRouterResponse.json()
-          rawText = openRouterData?.choices?.[0]?.message?.content?.trim() ?? ""
-          
-          if (!rawText) {
-            lastError = "empty OpenRouter response"
-            continue
-          }
-
-          parsedResponse = parseAndValidateResponse(rawText)
-          if (parsedResponse.ok) {
-            isSuccess = true
-            break
-          } else {
-            lastError = parsedResponse.reason
-          }
-        } catch (e) {
-          lastError = e instanceof Error ? e.message : "fetch error"
+      const ai = new GoogleGenAI({ apiKey: geminiApiKey })
+      
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            systemInstruction: instruction,
+            responseMimeType: "application/json",
+            temperature: 0.3,
         }
-        
-        // Wait 1 second before retrying
-        await new Promise(r => setTimeout(r, 1000))
+      });
+      
+      rawText = response.text || ""
+      
+      if (!rawText) {
+        return NextResponse.json(fallbackResponse(prompt, promptType, "empty Gemini response"))
       }
 
-      if (!isSuccess || !parsedResponse.ok) {
-        return NextResponse.json(fallbackResponse(prompt, promptType, `OpenRouter retries exhausted. Last error: ${lastError}`))
+      const parsedResponse = parseAndValidateResponse(rawText)
+      
+      if (!parsedResponse.ok) {
+        return NextResponse.json(fallbackResponse(prompt, promptType, `Gemini JSON parsing failed: ${parsedResponse.reason}`))
       }
 
       const parsed = parsedResponse
