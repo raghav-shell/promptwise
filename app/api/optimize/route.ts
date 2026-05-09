@@ -221,8 +221,13 @@ export async function POST(request: Request) {
     }
 
     const instruction = `
-Rewrite the user prompt into a concise, highly structured, cleanly formatted prompt.
-You must remove redundancy, improve grammar, and preserve original intent.
+You are an expert AI Prompt Engineer. Your goal is to deeply analyze the user's raw prompt, understand their underlying intent and logic, and completely rewrite it into the most effective, highly detailed, and professional prompt possible.
+
+Do not just format their text. You must:
+1. Actively expand on their ideas and fill in logical gaps.
+2. Define clear roles, constraints, and edge cases.
+3. Use precise, expert-level terminology appropriate for their task.
+4. Structure the output beautifully for an AI to understand perfectly.
 
 Return STRICT JSON only with this exact shape:
 {
@@ -234,20 +239,22 @@ Return STRICT JSON only with this exact shape:
 
 Rules:
 - clarityScore must be an integer from 1 to 100.
-- savings must be a number from 0 to 80.
-- optimizedPrompt must NOT include: "Role:", "Request:", "undefined", explanations, or meta commentary.
+- savings must be a number from 0 to 80 (represents percentage of token reduction or efficiency gained).
+- optimizedPrompt must be the fully rewritten prompt. It MUST NOT include: "Role:", "Request:", "undefined", explanations, or meta commentary.
 - optimizedPrompt should follow this structure:
-  Main instruction sentence
+  [Expert Persona / Context Definition]
+  [Clear, expanded core instruction]
 
-  Requirements:
-  - bullet one
-  - bullet two
+  Requirements & Constraints:
+  - [Specific expert-level requirement 1]
+  - [Specific expert-level requirement 2]
+  - [Format/Output constraint]
 - Do not wrap JSON in markdown.
 `
 
     try {
       const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 12000)
+      const timeout = setTimeout(() => controller.abort(), 25000)
 
       const openRouterResponse = await fetch(
         "https://openrouter.ai/api/v1/chat/completions",
@@ -269,7 +276,6 @@ Rules:
             temperature: 0.3,
             top_p: 0.9,
             max_tokens: 500,
-            response_format: { type: "json_object" },
           }),
           signal: controller.signal,
         },
