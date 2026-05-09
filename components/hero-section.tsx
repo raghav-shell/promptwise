@@ -150,20 +150,8 @@ function formatHistoryTime(timestamp: number) {
 }
 
 function splitIntoPhrases(text: string) {
-  const chunks = text
-    .split(/(?<=[.!?])\s+|\n/)
-    .flatMap((segment) => {
-      const trimmed = segment.trim()
-      if (!trimmed) return []
-      const words = trimmed.split(/\s+/)
-      if (words.length <= 6) return [trimmed]
-      const grouped: string[] = []
-      for (let i = 0; i < words.length; i += 4) {
-        grouped.push(words.slice(i, i + 4).join(" "))
-      }
-      return grouped
-    })
-  return chunks.length ? chunks : [text]
+  // Preserve words and all trailing whitespace including newlines
+  return text.match(/\S+\s*|\s+/g) || [text]
 }
 
 function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: string }) {
@@ -561,12 +549,12 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
     setDisplayedOptimizedPrompt("")
     const stream = window.setInterval(() => {
       const currentIndex = index
-      setDisplayedOptimizedPrompt((prev) => `${prev}${prev ? " " : ""}${chunks[currentIndex]}`)
+      setDisplayedOptimizedPrompt((prev) => prev + chunks[currentIndex])
       index += 1
       if (index >= chunks.length) {
         window.clearInterval(stream)
       }
-    }, 120)
+    }, 40)
     return () => window.clearInterval(stream)
   }, [optimizedPrompt])
 
