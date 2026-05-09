@@ -214,6 +214,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null)
     const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : ""
+    const targetModel = typeof body?.targetModel === "string" ? body.targetModel.trim() : "Auto-detect"
 
     if (!prompt) {
       return NextResponse.json({ error: "Prompt is required." }, { status: 400 })
@@ -256,6 +257,11 @@ Rules:
   - [Specific expert-level requirement 2]
   - [Format/Output constraint]
 - Do not wrap JSON in markdown.
+${
+  targetModel && targetModel !== "Auto-detect"
+    ? `\nCRITICAL DIRECTIVE:\nThe user intends to run this optimized prompt specifically in the **${targetModel}** AI model. You MUST tailor the formatting, syntax, and phrasing of the optimized prompt to perfectly match the quirks and best practices of ${targetModel}. (e.g., if Midjourney, use comma-separated keywords; if Claude, use heavy XML tags like <instructions>; if ChatGPT, use markdown blocks).`
+    : ""
+}
 `
 
     try {

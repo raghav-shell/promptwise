@@ -2,7 +2,9 @@
 
 import { motion, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } from "framer-motion"
 import { useRef, useState, useEffect } from "react"
-import { ArrowRight, Sparkles } from "lucide-react"
+import { ArrowRight, Sparkles, History } from "lucide-react"
+import { toast } from "sonner"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 const placeholderPrompts = [
   "make a website that looks nice and has good colors...",
@@ -383,6 +385,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
   const [metrics, setMetrics] = useState<OptimizationMetrics | null>(null)
   const [reasoning, setReasoning] = useState("")
   const [isCopied, setIsCopied] = useState(false)
+  const [targetModel, setTargetModel] = useState("Auto-detect")
   const [history, setHistory] = useState<PromptHistoryItem[]>([])
 
   useEffect(() => {
@@ -500,7 +503,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
     const apiRequest = fetch("/api/optimize", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: input }),
+      body: JSON.stringify({ prompt: input, targetModel }),
     })
       .then(async (res) => {
         const payload = await res.json().catch(() => null)
@@ -561,10 +564,30 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
   const handleCopyOptimized = async () => {
     if (!optimizedPrompt) return
     try {
-      await navigator.clipboard.writeText(optimizedPrompt)
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(optimizedPrompt)
+      } else {
+        const textArea = document.createElement("textarea")
+        textArea.value = optimizedPrompt
+        textArea.style.position = "absolute"
+        textArea.style.left = "-999999px"
+        document.body.prepend(textArea)
+        textArea.select()
+        try {
+          document.execCommand("copy")
+        } catch (error) {
+          console.error(error)
+          toast.error("Failed to copy prompt")
+          textArea.remove()
+          return
+        }
+        textArea.remove()
+      }
       setIsCopied(true)
+      toast.success("Prompt copied to clipboard!")
       window.setTimeout(() => setIsCopied(false), 1800)
     } catch {
+      toast.error("Failed to copy prompt")
       setIsCopied(false)
     }
   }
@@ -775,26 +798,46 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
               </div>
 
               <div className="flex items-center justify-between px-4 pb-4 pt-2 border-t border-border/50">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
-                  <motion.span
-                    className="w-2 h-2 rounded-full bg-emerald-400"
-                    animate={{
-                      scale: [1, 1.3, 1],
-                      opacity: [0.7, 1, 0.7],
-                    }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                  <AnimatePresence mode="wait">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
                     <motion.span
-                      key={isOptimizing ? analysisStages[analysisStep] : "ready"}
-                      initial={{ opacity: 0, y: 5, filter: "blur(4px)" }}
-                      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                      exit={{ opacity: 0, y: -5, filter: "blur(4px)" }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      {isOptimizing ? analysisStages[analysisStep] : "Ready to optimize your prompt"}
-                    </motion.span>
-                  </AnimatePresence>
+                      className="w-2 h-2 rounded-full bg-emerald-400"
+                      animate={{
+                        scale: [1, 1.3, 1],
+                        opacity: [0.7, 1, 0.7],
+                      }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={isOptimizing ? analysisStages[analysisStep] : "ready"}
+                        initial={{ opacity: 0, y: 5, filter: "blur(4px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, y: -5, filter: "blur(4px)" }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {isOptimizing ? analysisStages[analysisStep] : "Ready to optimize your prompt"}
+                      </motion.span>
+                    </AnimatePresence>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-semibold text-muted-foreground/60 tracking-wider">Target AI:</span>
+                    <input 
+                      list="ai-models" 
+                      value={targetModel}
+                      onChange={(e) => setTargetModel(e.target.value)}
+                      className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-xs text-foreground outline-none focus:ring-1 focus:ring-emerald-500/50 w-28 placeholder:text-muted-foreground/40 transition-all"
+                      placeholder="Auto-detect"
+                    />
+                    <datalist id="ai-models">
+                      <option value="Auto-detect" />
+                      <option value="ChatGPT" />
+                      <option value="Claude 3.5" />
+                      <option value="Gemini" />
+                      <option value="Midjourney" />
+                    </datalist>
+                  </div>
                 </div>
                 <MagneticButton>
                   <motion.span
@@ -883,35 +926,63 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                 <div className="glass rounded-2xl p-4 border border-white/20">
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground/70">Optimized Prompt</p>
-                    <MagneticButton>
-                      <motion.button
-                        type="button"
-                        onClick={handleCopyOptimized}
-                        whileTap={{ scale: 0.96 }}
-                        animate={isCopied ? { boxShadow: "0 0 24px oklch(0.84 0.12 230 / 0.45)" } : { boxShadow: "0 0 0px oklch(0.84 0.12 230 / 0)" }}
-                        transition={{ duration: 0.35 }}
-                        className="text-[11px] px-3 py-1.5 rounded-lg border border-white/20 bg-white/5 text-muted-foreground hover:text-foreground relative overflow-hidden"
-                      >
-                        <motion.span
-                          className="absolute inset-0 bg-gradient-to-r from-cyan/20 to-indigo/20"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: isCopied ? [0, 0.8, 0] : 0 }}
-                          transition={{ duration: 0.8 }}
-                        />
-                        <AnimatePresence mode="wait">
+                    <div className="flex items-center gap-2">
+                      <MagneticButton>
+                        <motion.button
+                          type="button"
+                          onClick={() => {
+                            handleCopyOptimized()
+                            window.open(`https://chatgpt.com/?q=${encodeURIComponent(optimizedPrompt)}`, '_blank')
+                          }}
+                          whileTap={{ scale: 0.96 }}
+                          className="text-[11px] px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 transition-colors"
+                        >
+                          Open in ChatGPT
+                        </motion.button>
+                      </MagneticButton>
+                      <MagneticButton>
+                        <motion.button
+                          type="button"
+                          onClick={() => {
+                            handleCopyOptimized()
+                            window.open(`https://claude.ai/new`, '_blank')
+                          }}
+                          whileTap={{ scale: 0.96 }}
+                          className="text-[11px] px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 hover:text-amber-300 transition-colors"
+                        >
+                          Open in Claude
+                        </motion.button>
+                      </MagneticButton>
+                      <MagneticButton>
+                        <motion.button
+                          type="button"
+                          onClick={handleCopyOptimized}
+                          whileTap={{ scale: 0.96 }}
+                          animate={isCopied ? { boxShadow: "0 0 24px oklch(0.84 0.12 230 / 0.45)" } : { boxShadow: "0 0 0px oklch(0.84 0.12 230 / 0)" }}
+                          transition={{ duration: 0.35 }}
+                          className="text-[11px] px-3 py-1.5 rounded-lg border border-white/20 bg-white/5 text-muted-foreground hover:text-foreground relative overflow-hidden"
+                        >
                           <motion.span
-                            key={isCopied ? "copied" : "copy"}
-                            initial={{ opacity: 0, y: 6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -6 }}
-                            transition={{ duration: 0.2 }}
-                            className="relative z-10"
-                          >
-                            {isCopied ? "Copied" : "Copy optimized"}
-                          </motion.span>
-                        </AnimatePresence>
-                      </motion.button>
-                    </MagneticButton>
+                            className="absolute inset-0 bg-gradient-to-r from-cyan/20 to-indigo/20"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: isCopied ? [0, 0.8, 0] : 0 }}
+                            transition={{ duration: 0.8 }}
+                          />
+                          <AnimatePresence mode="wait">
+                            <motion.span
+                              key={isCopied ? "copied" : "copy"}
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                              transition={{ duration: 0.2 }}
+                              className="relative z-10"
+                            >
+                              {isCopied ? "Copied" : "Copy text"}
+                            </motion.span>
+                          </AnimatePresence>
+                        </motion.button>
+                      </MagneticButton>
+                    </div>
                   </div>
                   <motion.p
                     initial={{ opacity: 0, filter: "blur(6px)" }}
