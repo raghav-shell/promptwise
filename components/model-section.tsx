@@ -95,6 +95,7 @@ const models = [
     strengths: ["Long context", "Nuanced output", "Safe responses"],
     recommended: true,
     matchScore: 94,
+    url: "https://claude.ai",
   },
   {
     id: "gpt",
@@ -110,6 +111,7 @@ const models = [
     strengths: ["Broad knowledge", "Tool calling", "Multimodal"],
     recommended: false,
     matchScore: 87,
+    url: "https://chatgpt.com",
   },
   {
     id: "gemini",
@@ -125,6 +127,7 @@ const models = [
     strengths: ["Multimodal", "Long context", "Fast inference"],
     recommended: false,
     matchScore: 82,
+    url: "https://gemini.google.com",
   },
   {
     id: "codex",
@@ -140,6 +143,7 @@ const models = [
     strengths: ["Code generation", "Debugging", "Documentation"],
     recommended: false,
     matchScore: 78,
+    url: "https://openai.com/index/openai-codex",
   },
 ]
 
@@ -284,6 +288,14 @@ export function ModelSection() {
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="text-2xl font-semibold text-foreground">Claude</h3>
                   <span className="text-sm text-muted-foreground">3.5 Sonnet</span>
+                  <a
+                    href="https://claude.ai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-auto w-8 h-8 rounded-lg border border-[#CC785C]/20 bg-[#CC785C]/5 flex items-center justify-center text-[#CC785C]/60 hover:text-[#CC785C] hover:bg-[#CC785C]/15 hover:border-[#CC785C]/40 transition-all duration-200"
+                  >
+                    <ArrowUpRight className="w-4 h-4" />
+                  </a>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
                   Best for nuanced writing and complex reasoning tasks
@@ -357,6 +369,14 @@ export function ModelSection() {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-semibold text-foreground">{model.name}</h3>
                     <span className="text-xs text-muted-foreground">{model.version}</span>
+                    <a
+                      href={model.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`ml-auto w-7 h-7 rounded-lg border ${model.borderColor} ${model.bgColor} flex items-center justify-center ${model.textColor} opacity-60 hover:opacity-100 transition-all duration-200`}
+                    >
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </a>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
                     {model.description}

@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } from "framer-motion"
 import { useRef, useState, useEffect } from "react"
-import { ArrowRight, Sparkles, History, Check, ChevronsUpDown } from "lucide-react"
+import { ArrowRight, Sparkles, History, Check, ChevronsUpDown, X } from "lucide-react"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -362,7 +362,7 @@ function AIOrb({ mouseX, mouseY }: { mouseX: ReturnType<typeof useMotionValue<nu
   )
 }
 
-export function HeroSection({ showHistory = false }: { showHistory?: boolean }) {
+export function HeroSection({ showHistory = false, onCloseHistory }: { showHistory?: boolean; onCloseHistory?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -995,19 +995,20 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                 transition={{ duration: 0.5 }}
                 className="mt-6 space-y-4 relative z-30"
               >
-                <div className="glass-strong rounded-2xl p-4 border border-foreground/15 shadow-xl">
-                  <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="glass-strong rounded-2xl p-6 border border-foreground/15 shadow-xl">
+                  <div className="flex items-center justify-between gap-3 mb-4">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground/70">Optimized Prompt</p>
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 transition-opacity duration-300 ${displayedOptimizedPrompt !== optimizedPrompt ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
                       <MagneticButton>
                         <motion.button
                           type="button"
+                          disabled={displayedOptimizedPrompt !== optimizedPrompt}
                           onClick={() => {
                             handleCopyOptimized()
                             window.open(`https://chatgpt.com/?q=${encodeURIComponent(optimizedPrompt)}`, '_blank')
                           }}
                           whileTap={{ scale: 0.96 }}
-                          className="text-xs px-4 py-2 font-medium rounded-lg border border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-500 shadow-md shadow-emerald-500/20 transition-all"
+                          className="text-xs px-4 py-2 font-medium rounded-lg border border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-500 shadow-md shadow-emerald-500/20 transition-all disabled:cursor-not-allowed"
                         >
                           Open in ChatGPT
                         </motion.button>
@@ -1015,12 +1016,13 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                       <MagneticButton>
                         <motion.button
                           type="button"
+                          disabled={displayedOptimizedPrompt !== optimizedPrompt}
                           onClick={() => {
                             handleCopyOptimized()
                             window.open(`https://claude.ai/new`, '_blank')
                           }}
                           whileTap={{ scale: 0.96 }}
-                          className="text-xs px-4 py-2 font-medium rounded-lg border border-amber-600 bg-amber-600 text-white hover:bg-amber-500 shadow-md shadow-amber-500/20 transition-all"
+                          className="text-xs px-4 py-2 font-medium rounded-lg border border-amber-600 bg-amber-600 text-white hover:bg-amber-500 shadow-md shadow-amber-500/20 transition-all disabled:cursor-not-allowed"
                         >
                           Open in Claude
                         </motion.button>
@@ -1028,11 +1030,12 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                       <MagneticButton>
                         <motion.button
                           type="button"
+                          disabled={displayedOptimizedPrompt !== optimizedPrompt}
                           onClick={handleCopyOptimized}
                           whileTap={{ scale: 0.96 }}
                           animate={isCopied ? { boxShadow: "0 0 24px oklch(0.84 0.12 230 / 0.45)" } : { boxShadow: "0 0 0px oklch(0.84 0.12 230 / 0)" }}
                           transition={{ duration: 0.35 }}
-                          className="text-xs px-4 py-2 font-medium rounded-lg border border-foreground/20 bg-foreground/10 backdrop-blur-md text-foreground hover:bg-foreground/15 shadow-sm relative overflow-hidden transition-all"
+                          className="text-xs px-4 py-2 font-medium rounded-lg border border-foreground/20 bg-foreground/10 backdrop-blur-md text-foreground hover:bg-foreground/15 shadow-sm relative overflow-hidden transition-all disabled:cursor-not-allowed"
                         >
                           <motion.span
                             className="absolute inset-0 bg-gradient-to-r from-cyan/20 to-indigo/20"
@@ -1056,6 +1059,7 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
                       </MagneticButton>
                     </div>
                   </div>
+                  <div className="w-full h-px bg-foreground/10 mb-4" />
                   <motion.p
                     initial={{ opacity: 0, filter: "blur(6px)" }}
                     animate={{ opacity: 1, filter: "blur(0px)" }}
@@ -1202,7 +1206,20 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
               <div className="glass-strong rounded-2xl border border-foreground/10 p-3 md:p-4 shadow-xl shadow-indigo/10 text-left">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground/70">Prompt History</p>
-                  <span className="text-[11px] text-muted-foreground/60">{history.length} saved</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-muted-foreground/60">{history.length} saved</span>
+                    {onCloseHistory && (
+                      <motion.button
+                        type="button"
+                        onClick={onCloseHistory}
+                        whileHover={{ scale: 1.1, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="w-6 h-6 rounded-lg flex items-center justify-center border border-foreground/10 text-muted-foreground/70 hover:text-foreground hover:border-foreground/20 hover:bg-foreground/5 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </motion.button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="max-h-[28rem] overflow-auto space-y-2 pr-1">
@@ -1273,25 +1290,25 @@ export function HeroSection({ showHistory = false }: { showHistory?: boolean }) 
             
             <div className="flex flex-wrap items-center justify-center gap-12 sm:gap-20">
               {/* Vercel Logo */}
-              <div className="flex items-center gap-1.5 text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
+              <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-pointer">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L24 22H0L12 2Z"/></svg>
                 <span className="text-2xl font-black tracking-tighter">Vercel</span>
-              </div>
+              </a>
               
               {/* Linear Logo */}
-              <div className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
+              <a href="https://linear.app" target="_blank" rel="noopener noreferrer" className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-pointer">
                 <span className="text-2xl font-bold tracking-tight">Linear</span>
-              </div>
+              </a>
               
               {/* Notion Logo */}
-              <div className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
+              <a href="https://notion.so" target="_blank" rel="noopener noreferrer" className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-pointer">
                 <span className="text-2xl font-serif">Notion</span>
-              </div>
+              </a>
               
               {/* Figma Logo */}
-              <div className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-default">
+              <a href="https://figma.com" target="_blank" rel="noopener noreferrer" className="flex items-center text-muted-foreground/60 hover:text-foreground transition-colors duration-300 cursor-pointer">
                 <span className="text-xl font-bold tracking-widest">Figma</span>
-              </div>
+              </a>
             </div>
           </div>
         </motion.div>

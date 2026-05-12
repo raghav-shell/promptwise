@@ -22,7 +22,7 @@ export default function Home() {
       />
 
       {/* Hero Section */}
-      <HeroSection showHistory={showHistory} />
+      <HeroSection showHistory={showHistory} onCloseHistory={() => setShowHistory(false)} />
 
       {/* Interactive Prompt Transformation */}
       <TransformSection />
